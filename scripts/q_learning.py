@@ -4,6 +4,9 @@ import rospy
 import numpy as np
 import os
 
+# import custom message types from project
+from q_learning.msg import QMatrix, QLearningReward, RobotMoveObjectToTag
+
 # Path of directory on where this file is located
 path_prefix = os.path.dirname(__file__) + "/action_states/"
 
@@ -11,6 +14,11 @@ class QLearning(object):
     def __init__(self):
         # Initialize this node
         rospy.init_node("q_learning")
+
+        # Initialize publishers and subscribers TODO: find type of msgs
+        self.q_matrix_pub = rospy.Publisher("q_matrix", QMatrix, queue_size=10)
+        self.robot_action_pub = rospy.Publisher("robot_action", RobotMoveObjectToTag, queue_size=10)
+        rospy.Subscriber(self.reward, Reward, function())
 
         # Fetch pre-built action matrix. This is a 2d numpy array where row indexes
         # correspond to the starting state and column indexes are the next states.
@@ -44,6 +52,49 @@ class QLearning(object):
         self.states = np.loadtxt(path_prefix + "states.txt")
         self.states = list(map(lambda x: list(map(lambda y: int(y), x)), self.states))
 
+        # Initialize Q-matrix [64 x 9], rows are states, columns are actions
+        self.Q = np.array((64, 9))
+
+
+    def get_reward(self):
+        # gets the reward from the environment
+
+    def q_learning_algorithm(self):
+        t = 0 # time step
+        converge = False # indicator for whether Q has converged
+        state = 0 
+
+        gamma = 0.8
+        
+        while converge != True:
+            # choose random valid state uniformly
+            possible_states = self.action_matrix[state,:] != -1
+
+            # if we reached a final state (all three objects in front of tags)
+            if possible_states == []: #check later
+                state = 0
+                action = reset_world # reference reset_world.py
+            # if continuing trajectory
+            else: 
+                next_state = np.random.choice(possible_states, size = 1)
+                action = self.action[state, next_state]
+                publish action to robot_move # need a lock to make sure 
+                while not message received: rospy.spin()
+                reward = subscriber # check that we are actually getting a reward
+
+                # Update Q_matrix 
+                self.Q[state, action] = reward + (gamma * np.max(self.Q[next_state, :]))
+                
+                # Set next state
+                state = next_state
+            
+            t += 1
+    
+
+    def run(self):
+        self.q_learning_algorithm()
+
+
     def save_q_matrix(self):
         # TODO: You'll want to save your q_matrix to a file once it is done to
         # avoid retraining
@@ -51,3 +102,5 @@ class QLearning(object):
 
 if __name__ == "__main__":
     node = QLearning()
+    node.run()
+    rospy.spin()
