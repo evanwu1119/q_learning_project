@@ -15,10 +15,12 @@ class QLearning(object):
         # Initialize this node
         rospy.init_node("q_learning")
 
-        # Initialize publishers and subscribers TODO: find type of msgs
+        # Initialize publishers and subscribers
         self.q_matrix_pub = rospy.Publisher("q_matrix", QMatrix, queue_size=10)
         self.robot_action_pub = rospy.Publisher("robot_action", RobotMoveObjectToTag, queue_size=10)
-        rospy.Subscriber(self.reward, Reward, function())
+        rospy.Subscriber("q_learning/reward", QLearningReward, self.get_reward())
+
+        self.msgReceived = False
 
         # Fetch pre-built action matrix. This is a 2d numpy array where row indexes
         # correspond to the starting state and column indexes are the next states.
@@ -55,41 +57,66 @@ class QLearning(object):
         # Initialize Q-matrix [64 x 9], rows are states, columns are actions
         self.Q = np.array((64, 9))
 
+        # Variables for convergence
+        self.convCount = 0 # count how many iterations since last significant change for convergence check
+        self.convChange = 0.0001 # maximum allowed change for convergence
+        self.convNum = 100 # number of iterations with no change before matrix considered converged
 
-    def get_reward(self):
+
+    def get_reward(self, data):
         # gets the reward from the environment
+        self.reward = data.reward
+        self.msgReceived = True
+
+    def is_converged(self, prevQ, currQ):
+        diffs = np.subtract(prevQ, currQ)
+        # absDiffs = np.absolute(diffs)
+        maxDiff = max( max(diffs), abs(min(diffs)) ) # accounts for negative difference
+        self.convCount = self.convCount + 1 if maxDiff < convChange else 0
+        return self.convCount >= convNum
+
 
     def q_learning_algorithm(self):
         t = 0 # time step
         converge = False # indicator for whether Q has converged
-        state = 0 
+        state = 0
 
         gamma = 0.8
-        
+
         while converge != True:
-            # choose random valid state uniformly
-            possible_states = self.action_matrix[state,:] != -1
+            # get list of possible next states
+            possible_states = [i for i in len(self.action_matrix[state]) if self.action_matrix[state][i] != -1]
 
-            # if we reached a final state (all three objects in front of tags)
-            if possible_states == []: #check later
+            # if we reached a final state (all three objects in front of tags), the world resets itself, so we update our current state
+            if (possible_states == []).all(): # using numpy.all() for array comparison
                 state = 0
-                action = reset_world # reference reset_world.py
-            # if continuing trajectory
-            else: 
-                next_state = np.random.choice(possible_states, size = 1)
-                action = self.action[state, next_state]
-                publish action to robot_move # need a lock to make sure 
-                while not message received: rospy.spin()
-                reward = subscriber # check that we are actually getting a reward
+                possible_states = [i for i in len(self.action_matrix[state]) if self.action_matrix[state][i] != -1]
 
-                # Update Q_matrix 
-                self.Q[state, action] = reward + (gamma * np.max(self.Q[next_state, :]))
-                
-                # Set next state
-                state = next_state
-            
+            # continue regardless of whether reset or not
+            next_state = np.random.choice(possible_states, size = 1)
+            action_num = self.action[state][next_state]
+
+            # publish chosen action
+            action = RobotMoveObjectToTag()
+            colorID = self.actions[action][1]
+            action.robot_object = "pink" if colorID==0 else "green" if colorID==1 else "blue"
+            robot_object.tag_id = self.actions[action][1]
+            self.action_pub.publish(action)
+
+            while not self.msgReceived: rospy.spin()
+            reward = self.reward # check that we are actually getting a reward
+            self.msgReceived = False
+
+            # save prev matrix for convergence check
+            prevQ = self.Q.copy() # deep copy with numpy.ndarray.copy()
+            # Update Q_matrix
+            self.Q[state, action] = reward + (gamma * np.max(self.Q[next_state, :]))
+
+            # Set next state
+            state = next_state
+
             t += 1
-    
+
 
     def run(self):
         self.q_learning_algorithm()
