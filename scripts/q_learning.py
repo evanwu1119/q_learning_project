@@ -68,8 +68,8 @@ class QLearning(object):
         self.reward = data.reward
         self.msgReceived = True
 
-    def is_converged(self, prevQ, currQ):
-        diffs = np.subtract(prevQ, currQ)
+    def is_converged(self, prevQ):
+        diffs = np.subtract(prevQ, self.Q)
         # absDiffs = np.absolute(diffs)
         maxDiff = max( max(diffs), abs(min(diffs)) ) # accounts for negative difference
         self.convCount = self.convCount + 1 if maxDiff < convChange else 0
@@ -78,12 +78,12 @@ class QLearning(object):
 
     def q_learning_algorithm(self):
         t = 0 # time step
-        converge = False # indicator for whether Q has converged
+        converged = False # indicator for whether Q has converged
         state = 0
 
         gamma = 0.8
 
-        while converge != True:
+        while converged == False:
             # get list of possible next states
             possible_states = [i for i in len(self.action_matrix[state]) if self.action_matrix[state][i] != -1]
 
@@ -116,6 +116,7 @@ class QLearning(object):
             state = next_state
 
             t += 1
+            converged = is_converged(prevQ)
 
 
     def run(self):
