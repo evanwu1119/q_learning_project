@@ -60,7 +60,7 @@ class QLearning(object):
         # Initialize Q-matrix [64 x 9], rows are states, columns are actions
         self.Q = np.zeros((64, 9))
 
-        self.num_conv = 0 # track number of times matrix is converged
+        self.num_conv = 0 # track number of consecutive times matrix doesn't change
 
         self.initialized = True
 
@@ -77,6 +77,8 @@ class QLearning(object):
         abs_diff = np.abs(self.Q - prevQ)
         if np.amax(abs_diff) < epsilon:
             self.num_conv += 1
+        else:
+            self.num_conv = 0
         
         return self.num_conv == conv
 
@@ -90,7 +92,7 @@ class QLearning(object):
 
         converged = False # indicator for whether Q has converged
         epsilon = 0.001 # threshold for convergence
-        conv = 100 # number of iterations repeated for convergence
+        conv = 1000 # number of iterations repeated for convergence
 
         while not converged:
             # get list of possible next states
@@ -113,10 +115,10 @@ class QLearning(object):
             self.robot_action_pub.publish(robot_action)
             
             # get reward, wait for subscriber to update
-            # r = rospy.Rate(10)
-            # while not self.msg_received and not rospy.is_shutdown(): 
-            #     print("waiting...")
-            #     r.sleep()
+            r = rospy.Rate(10)
+            while not self.msg_received and not rospy.is_shutdown(): 
+                print("waiting...")
+                r.sleep()
             reward = self.reward # check that we are actually getting a reward
             self.msg_received = False
 
@@ -144,8 +146,9 @@ class QLearning(object):
 
 
     def run(self):
+        rospy.sleep(3)
         self.q_learning_algorithm()
-        #self.save_q_matrix()
+        self.save_q_matrix()
         
 
 if __name__ == "__main__":
