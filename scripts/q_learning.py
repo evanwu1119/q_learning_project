@@ -18,9 +18,9 @@ class QLearning(object):
         rospy.init_node("q_learning")
 
         # Initialize publishers and subscribers
-        self.q_matrix_pub = rospy.Publisher("q_matrix", QMatrix, queue_size=10)
-        self.robot_action_pub = rospy.Publisher("robot_action", RobotMoveObjectToTag, queue_size=10)
-        rospy.Subscriber("q_learning/reward", QLearningReward, self.get_reward())
+        self.q_matrix_pub = rospy.Publisher("/q_learning/q_matrix", QMatrix, queue_size=10)
+        self.robot_action_pub = rospy.Publisher("/q_learning/robot_action", RobotMoveObjectToTag, queue_size=10)
+        rospy.Subscriber("/q_learning/reward", QLearningReward, self.get_reward)
 
         # Initialize variables to store information from reward subscriber
         self.reward = 0
@@ -75,7 +75,7 @@ class QLearning(object):
         # checks if all elements in the Q matrix changed significantly (> epsilon)
         # if converged for conv iterations returns true
         abs_diff = np.abs(self.Q - prevQ)
-        if max(abs_diff) < epsilon:
+        if np.amax(abs_diff) < epsilon:
             self.num_conv += 1
         
         return self.num_conv == conv
@@ -90,7 +90,7 @@ class QLearning(object):
 
         converged = False # indicator for whether Q has converged
         epsilon = 0.001 # threshold for convergence
-        conv = 10 # number of iterations repeated for convergence
+        conv = 100 # number of iterations repeated for convergence
 
         while not converged:
             # get list of possible next states
@@ -103,23 +103,29 @@ class QLearning(object):
 
             # sample next state uniformly from possible transitions and get action required
             next_state = np.random.choice(possible_states)
-            action = self.action_matrix[state, next_state]
-            action = self.actions[action]
+            action_ind = int(self.action_matrix[state, next_state])
+            action = self.actions[action_ind]
 
             # publish chosen action
-            self.robot_action_pub.publish(RobotMoveObjectToTag(action['object'], action['tag']))
-
+            robot_action = RobotMoveObjectToTag()
+            robot_action.robot_object = action['object']
+            robot_action.tag_id = action['tag']
+            self.robot_action_pub.publish(robot_action)
+            
             # get reward, wait for subscriber to update
-            while not self.msg_received: rospy.spin()
+            # r = rospy.Rate(10)
+            # while not self.msg_received and not rospy.is_shutdown(): 
+            #     print("waiting...")
+            #     r.sleep()
             reward = self.reward # check that we are actually getting a reward
-            self.msgReceived = False
+            self.msg_received = False
 
             # save prev matrix for convergence check
             prevQ = np.copy(self.Q)
 
             # update Q_matrix and publish to topic as flattened row-major array
-            self.Q[state, action] = reward + (gamma * np.max(self.Q[next_state, :]))
-            self.q_matrix_pub(q_matrix = self.Q.flatten())
+            self.Q[state, action_ind] = reward + (gamma * np.max(self.Q[next_state,:]))
+            self.q_matrix_pub.publish(q_matrix = self.Q.flatten())
 
             # set next state as current state
             state = next_state
@@ -128,23 +134,21 @@ class QLearning(object):
             converged = self.is_converged(prevQ, epsilon, conv)
 
             t += 1
+        
+        print("converged timestep: " + str(t))
 
 
     def save_q_matrix(self):
-        # save the q_matrix to .npy file
-        file = open("trained_q_matrix", "w")
-        np.save(file, self.Q)
-        file.close
+        # save the q_matrix to .csv file
+        np.savetxt(path_prefix + "trained_q_matrix.csv", self.Q)
 
 
     def run(self):
-        # make sure everything's initialized 
-        while not self.initialized: rospy.spin()
-
         self.q_learning_algorithm()
-        # self.save_q_matrix()
+        #self.save_q_matrix()
         
 
 if __name__ == "__main__":
     node = QLearning()
     node.run()
+    rospy.spin()
