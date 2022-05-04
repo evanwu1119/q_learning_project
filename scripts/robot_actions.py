@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import rospy
+import rospy, os, cv2, cv_bridge
 import numpy as np
-import os
 
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Image
 
 # import custom message types from project
 from q_learning_project.msg import RobotMoveObjectToTag
@@ -24,6 +23,15 @@ class RobotActions(object):
         self.robot_action_pub = rospy.Publisher("/q_learning/robot_action", RobotMoveObjectToTag, queue_size=10)       
         rospy.Subscriber("/q_learning/robot_action", RobotMoveObjectToTag, self.robot_action_received)
         rospy.Subscriber("/scan", LaserScan, self.scan_received)
+        self.bridge = cv_bridge.CvBridge()
+        rospy.Subscriber("/camera/rgb/image_raw", ) # fill this in
+        # action publisher too 
+
+        # set up necessary variables
+        self.color = ""
+        self.tag = 0
+        self.closest_object = # angle or distance or both or ....
+        self.camera_feed = #something camera
 
         # Fetch pre-built action matrix. This is a 2d numpy array where row indexes
         # correspond to the starting state and column indexes are the next states.
@@ -82,16 +90,45 @@ class RobotActions(object):
 
     def robot_action_received(self, data):
         # subscriber function 
-        actions = True 
+        self.color = data['object'] #'pink'
+        self.tag = data['tag'] # 1
+
+        # detect object
+        move_to_tube(color = color)
+        move_to_tag(tag = tag)
+
+        # set finished action maybe move back to origin
 
 
     def scan_received(self, data):
         # get measurements from closest object so that we can move to each thing 
 
 
-    def move_to_tube(self):
-        # move to the tube and pick it up
+    def picture_received(self, data):
+        # get measurements from robot camera to detect 
+
+
+    def move_to_tube(self, color):
+        # detect tube, spin around if not in camera frame
+        while not detecting_color: 
+            # spin around
+            publish.(angular velocity = 0.1)
+
+        # once the tube is in the frame orient it to the center
+        # reuse line follower code
+
+        # move to correct distance 
+
+        # pick up the tube
 
     
-    def move_to_tag(self): 
+    def move_to_tag(self, tag): 
         # move to the tag
+        while not detecting_tag:
+            #spin around
+
+        # orient tag to center 
+
+        # move to correct distance
+
+        # drop tube
