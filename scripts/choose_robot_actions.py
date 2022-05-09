@@ -37,9 +37,10 @@ class ChooseRobotActions(object):
         # get optimal actions from converged Q-matrix and publish
         state = 0 
 
-        while np.where(self.Q[state,:] == 0).shape[0] != 0:
+        while len(np.where(self.Q[state,:] == 0)) != 0:
             # choose action with highest Q-value, or randomly if multiple are the max
             possible_states = self.Q[state,:]
+            print(np.argwhere(possible_states == np.amax(possible_states)))
             optimal_action_ind = np.random.choice(np.argwhere(possible_states == np.amax(possible_states)))
 
             # get action and publish 
@@ -51,7 +52,7 @@ class ChooseRobotActions(object):
 
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     pub = ChooseRobotActions()
     rospy.sleep(3)
     pub.choose_robot_actions()

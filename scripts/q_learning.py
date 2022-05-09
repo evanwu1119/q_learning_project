@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 # import custom message types from project
-from q_learning_project.msg import QMatrix, QLearningReward, RobotMoveObjectToTag
+from q_learning_project.msg import QMatrix, QMatrixRow, QLearningReward, RobotMoveObjectToTag
 
 # Path of directory on where this file is located
 path_prefix = os.path.dirname(__file__) + "/action_states/"
@@ -125,9 +125,12 @@ class QLearning(object):
             # save prev matrix for convergence check
             prevQ = np.copy(self.Q)
 
-            # update Q_matrix and publish to topic as flattened row-major array
+            # update Q_matrix and publish to topic as array of QMatrixRow
             self.Q[state, action_ind] = reward + (gamma * np.max(self.Q[next_state,:]))
-            self.q_matrix_pub.publish(q_matrix = self.Q.flatten())
+            q_msg = []
+            for i in range(self.Q.shape[0]):
+                q_msg.append(QMatrixRow(q_matrix_row = self.Q[i,:].astype(int).tolist()))
+            self.q_matrix_pub.publish(QMatrix(q_matrix = q_msg))
 
             # set next state as current state
             state = next_state

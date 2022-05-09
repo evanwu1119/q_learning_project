@@ -133,6 +133,7 @@ class RobotMovement(object):
 
     def move_to_origin(self):
         # move back to origin, basically just proportional control in reverse direction
+        # this assumes minimal turning in the initial movement, so slicing images might help as long as we don't cut anything off
         while self.min_dist - self.max_dist < 0.01:
             lin_error = 0.1 * (self.min_dist - self.max_dist)
             twist = Twist()
@@ -186,7 +187,7 @@ class RobotMovement(object):
 
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     sub = RobotMovement()
     rospy.sleep(3)
     sub.execute_actions()
