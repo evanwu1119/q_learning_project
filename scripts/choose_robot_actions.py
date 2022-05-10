@@ -36,19 +36,21 @@ class ChooseRobotActions(object):
     def choose_robot_actions(self):
         # get optimal actions from converged Q-matrix and publish
         state = 0 
+        num_actions = 3
 
-        while len(np.where(self.Q[state,:] == 0)) != 0:
+        while num_actions:
             # choose action with highest Q-value, or randomly if multiple are the max
-            possible_states = self.Q[state,:]
-            print(np.argwhere(possible_states == np.amax(possible_states)))
-            optimal_action_ind = np.random.choice(np.argwhere(possible_states == np.amax(possible_states)))
+            possible_actions = self.Q[state,:]
+            possible_inds = np.argwhere(possible_actions == np.amax(possible_actions)).flatten()
+            optimal_action_ind = np.random.choice(possible_inds)
 
             # get action and publish 
-            action = self.action_matrix[optimal_action_ind]
-            self.robot_action_pub.publish(RobotMoveObjectToTag(action['object'], action['tag']))
+            action = self.actions[int(optimal_action_ind)]
+            self.robot_action_pub.publish(RobotMoveObjectToTag(robot_object = action['object'], tag_id = action['tag']))
 
             # update current state
-            state = np.argwhere(self.action_matrix[state,:] == optimal_action_ind)
+            state = int(np.argwhere(self.action_matrix[state,:] == optimal_action_ind))
+            num_actions -= 1
 
 
 

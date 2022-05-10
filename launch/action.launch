@@ -1,5 +1,5 @@
 <launch>
-  <node name="virtual_reset_world" pkg="q_learning_project" type="virtual_reset_world.py" output="screen"/>
+  <!-- <node name="virtual_reset_world" pkg="q_learning_project" type="virtual_reset_world.py" output="screen"/> -->
   <node name="robot_action_pub" pkg="q_learning_project" type="choose_robot_actions.py" output="screen"/>
   <node name="robot_movement_sub" pkg="q_learning_project" type="robot_movement.py" output="screen"/>
 </launch>
