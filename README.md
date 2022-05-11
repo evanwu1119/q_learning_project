@@ -36,18 +36,19 @@ We will execute the path to most likely receive a reward using a greedy algorith
 
 ## Challenges
 
-- q-matrix setup: at first, it was a bit difficult for us to wrap our heads around the structure of the q-matrix data provided and what we were supposed to do with it. But by sitting together and going through it all step by step, we eventually figured it out.
+- q-matrix setup: At first, it was a bit difficult for us to wrap our heads around the structure of the q-matrix data provided and what we were supposed to do with it. But by sitting together and going through it all step by step, we eventually figured it out.
 - working with the camera: Implementing camera-based motion was difficult because we found that by the time the frame where the target was in sight was relayed back to the robot, the robot had already rotated past the object.
-- working with the arm:
+- working with the arm: We wanted to test out arm movement with the visualization software, but it wasn't working too well. We solved this by carefully testing on the physical robot in a separate file, modifying little by little starting from the example arm movement in the tutorial on the website.
 
 ## Future work
 
+- We are pretty happy with our implementation. The biggest hurdle was the camera, so it would be ideal to eliminate that issue. Perhaps there is a way to guarantee a good connection and low latency for the camera. But perhaps there is another way to do this project that relies less on the camera, either by deciding that the camera is only needed in short particular bursts or by using some other method to navigate, such as mapping the area before beginning.
 
 ## Takeaways
 
 - Throughout the project, we would make a pseudocode outline right in the python file before writing real code.
 This was really helpful so that we didn't have to work from a blank slate, and it helped us organize our thoughts before we got in the weeds. Doing the outline together also helped us both understand what we were doing so that when we divided the coding labor, it wasn't too difficult for the one person to understand what the other had done.
--
+- Our workflow was to start by looking over the project/phase we were going to start on together, then agree on what we should do before the next meeting. This worked well for us because it allowed us to have good communication without having to carve out enough time to do the entire project together.
 
 ## Implementation Plan
 ### Q-learning algorithm
