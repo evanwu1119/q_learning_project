@@ -1,7 +1,7 @@
 # q_learning_project
 Zoa Katok, Evan Wu
 (Submitted using flex hours)
-![Robot moves objects to correct tag](./q_learning.gif)
+![Robot moves objects to correct tag, jump cuts were to cut out extended scan times where the object/tags are not in the image.](./q_learning.gif)
 
 ## Writeup
 ### Objectives
@@ -53,6 +53,7 @@ Lines 262-280 move_to_tag()
 - q-matrix setup: At first, it was a bit difficult for us to wrap our heads around the structure of the q-matrix data provided and what we were supposed to do with it. But by sitting together and going through it all step by step, we eventually figured it out.
 - working with the camera: Implementing camera-based motion was difficult because we found that by the time the frame where the target was in sight was relayed back to the robot, the robot had already rotated past the object. This was due to internet latency, and we found moving closer to the router helped significantly with the delay in incoming images.
 - optimizing robot movement: due to noise in the mearuements and detection process, we had to use proportional control with some buffering and parameter optimization to make sure the robot ended up in the right place. Due to real-time latency and lag issues we also found that the robot movement had to be very slow during the detection and movement steps for accuracy. 
+- the blue tube: for some reason detecting the blue colored tube caused a variety of issues randomly, the arm usually stopped working and the robot might randomly detect some other color as blue and move towards that instead. The issue didn't really improve with optimizing HSV ranges, so it just made the final runs more painful. 
 - working with the arm: We wanted to test out arm movement with the visualization software, but it wasn't working too well. We solved this by carefully testing on the physical robot in a separate file, modifying little by little starting from the example arm movement in the tutorial on the website.
 
 ## Future work
