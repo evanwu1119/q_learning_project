@@ -1,6 +1,7 @@
 # q_learning_project
 Zoa Katok, Evan Wu
-
+(Submitted using flex hours)
+![Robot moves objects to correct tag](./q_learning.gif)
 
 ## Writeup
 ### Objectives
@@ -10,34 +11,48 @@ The goal of this project is to use the Q-learning reinforcement learning algorit
 The Q-learning algorithm iteratively trains a robot to perform a specific task by reinforcing particular state-action combinations that lead the robot to the desired outcome. In this case, the task was to move colored tubes in front of AR tags in a specific order. To train the robot, we allowed it to explore a virtual version of the environment by randomly performing permissible actions. As our state space is small, over time the robot accumulates experiences of achieving the desired configuration and updates the state-action pairs in the Q-matrix to reflect the trajectory of achieved rewards. Recapitulating this path using a greedy algorithm on the trained Q-table allows for selection of the correct sequence of actions to achieve the matching tube-AR tag pattern.
 
 ### Q-learning algorithm
-Lines 97-115 q_learning_algorithm()
+In q_learning.py:
+Lines 97-115 q_learning_algorithm()  
 We selected actions for the robot to take from a given state randomly based on permissible actions specified by the "action_matrix". If there are no permissible actions we reset the world. The randomly selected action is then matched to the "actions" table and we feed the details to the phantom robot to perform.
 
-Lines 117-130 q_learning_algorithm() and lines 68-71 get_reward()
+Lines 117-130 q_learning_algorithm() and lines 68-71 get_reward()  
 The Q-matrix is updated using the Bellman equation, where current and projected rewards for taking a certain action given a state are updated based on feedback from the environment. We get the feedback in the form of rewards from get_reward(), which subscribes to the environment node that calculates the reward from a particular robot action. To ensure correct sequencing of actions and rewards, we make sure to receive a new signal from the environment before calculating Q.
 
-Lines 74-83 is_converged()
+Lines 74-83 is_converged()  
 We determined whether the Q matrix is converged or not by determining if the Q-matrix is still changing significantly. We do this by setting a threshold value epsilon where if the difference between the past and current Q values are all less than epsilon, we consider the matrix to be not changing. Additionally, we stipulate that the matrix needs to not be changing for 1000 consecutive timesteps, mostly because our random sampling approach needs some leeway to fully explore the state space.
 
-We will execute the path to most likely receive a reward using a greedy algorithm on the converged Q matrix. Given a state, we will choose the action with maximum Q value (or random if multiple actions share the max) until we reach a final configuration.
+In choose_robot_actions.py():
+Lines 36-53:
+We executed the path to most likely receive a reward using a greedy algorithm on the converged Q matrix. Given a state, we chose the action with maximum Q value (or random if multiple actions share the max), published it, and updated the state until we reach a final configuration.
 
 ## Robot perception
+In robot_movement.py:  
+Lines 120-149 move_object()
+We identified colored objects using the robot camera and subsetting HSV values corresponding to the desired object color. If the color is detected, we calculate the moment of the colored pixels to determine the location of the object within the picture.  
 
-- identifying locations and identities of colored objects:
-- identifying locations and identities of tags:
+Lines 218-241 move_to_tag()
+We identified tags using the Aruco library's detectMarkers function, which returns an ID and location within the image of any markers detected. We then center the robot on the tag using proportional control, and approach the tag until reaching a certain stop distance similar to above to drop off the colored objects. 
 
 ## Robot manipulation and movement
-
+In robot_movement.py:
+Lines 140-172 move_object()
 - Moving to the right spot: we determined a particular ideal distance for picking up the tube. So we had the robot first move such that the correct color is in the middle of its field of vision, then move the appropriate distance away (about 0.28 meters away)
+
+Lines 174-189 move_object()
 - Picking up the tube: we experimented with different arm positions to determine which are best. So when the robot is in the right position, we have the robot open its gripper all the way (for maximum margin for error), then go to the predetermined "arm down" position, then close the gripper sufficiently, then go to the predetermined "arm up" position.
+
+Lines 226-258 move_to_tag()
 - Moving to the desired destination: we made sure the arm up position does not block the camera at all because the robot has to use its camera to locate the AR tags. Then it is a matter of rotating to find the tag and moving towards it. We make sure to be a sufficient distance from the wall so the robot has enough space to put the tube down.
+
+Lines 262-280 move_to_tag()
 - Putting the tube down: Since we are in position, we just move the arm to the "arm down" position, open the gripper, and move the arm back to the "arm up" position.
 
 
 ## Challenges
 
 - q-matrix setup: At first, it was a bit difficult for us to wrap our heads around the structure of the q-matrix data provided and what we were supposed to do with it. But by sitting together and going through it all step by step, we eventually figured it out.
-- working with the camera: Implementing camera-based motion was difficult because we found that by the time the frame where the target was in sight was relayed back to the robot, the robot had already rotated past the object.
+- working with the camera: Implementing camera-based motion was difficult because we found that by the time the frame where the target was in sight was relayed back to the robot, the robot had already rotated past the object. This was due to internet latency, and we found moving closer to the router helped significantly with the delay in incoming images.
+- optimizing robot movement: due to noise in the mearuements and detection process, we had to use proportional control with some buffering and parameter optimization to make sure the robot ended up in the right place. Due to real-time latency and lag issues we also found that the robot movement had to be very slow during the detection and movement steps for accuracy. 
 - working with the arm: We wanted to test out arm movement with the visualization software, but it wasn't working too well. We solved this by carefully testing on the physical robot in a separate file, modifying little by little starting from the example arm movement in the tutorial on the website.
 
 ## Future work
