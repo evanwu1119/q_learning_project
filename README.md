@@ -1,7 +1,8 @@
 # q_learning_project
 Zoa Katok, Evan Wu
 (Submitted using flex hours)
-![Robot moves objects to correct tag, jump cuts were to cut out extended scan times where the object/tags are not in the image.](./q_learning.gif)
+Link to video: https://drive.google.com/file/d/1elmf3kl-YRrxdz35oOihlCGAz4xlUjts/view?usp=sharing
+Robot moves objects to correct tag, jump cuts were to cut out extended scan times where the object/tags are not in the image.
 
 ## Writeup
 ### Objectives
